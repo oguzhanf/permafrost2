@@ -1,0 +1,260 @@
+@page "/agents"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+<PageTitle>Agents - Permafrost2 Customer Portal</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-download me-2"></i>
+                Agent Downloads
+            </h1>
+            <p class="lead mb-4">
+                Download and deploy Permafrost2 agents to collect identity and permission data from your infrastructure.
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Domain Controller Agent -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-server me-2"></i>
+                        Domain Controller Agent
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="card-text">
+                        Deploy this agent on your Active Directory domain controllers to collect comprehensive domain data.
+                    </p>
+                    
+                    <h6 class="fw-bold">What it collects:</h6>
+                    <ul class="mb-3">
+                        <li>User accounts and group memberships</li>
+                        <li>Domain security policies</li>
+                        <li>Organizational unit structures</li>
+                        <li>Group policy assignments</li>
+                        <li>Trust relationships</li>
+                        <li>Service principal names (SPNs)</li>
+                    </ul>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Data is securely transmitted to the Permafrost2 API layer for processing and analysis.</small>
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" @onclick="@(() => DownloadAgent("domain-controller"))">
+                                <i class="fas fa-download me-2"></i>
+                                Download DC Agent
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => ViewDocumentation("domain-controller"))">
+                                <i class="fas fa-book me-2"></i>
+                                View Documentation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Requires Domain Admin privileges
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Server Agent -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-hdd me-2"></i>
+                        Server Agent
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="card-text">
+                        Install on Windows servers to monitor local security events and user activity.
+                    </p>
+                    
+                    <h6 class="fw-bold">What it collects:</h6>
+                    <ul class="mb-3">
+                        <li>Security event logs and audit events</li>
+                        <li>User rights and privilege usage</li>
+                        <li>Local group memberships</li>
+                        <li>Local user accounts</li>
+                        <li>Local security groups</li>
+                        <li>Logon/logoff activities</li>
+                    </ul>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <small>Monitors local system security events and user rights assignments.</small>
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" @onclick="@(() => DownloadAgent("server"))">
+                                <i class="fas fa-download me-2"></i>
+                                Download Server Agent
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => ViewDocumentation("server"))">
+                                <i class="fas fa-book me-2"></i>
+                                View Documentation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        <i class="fas fa-user-shield me-1"></i>
+                        Requires Local Admin privileges
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workstation Agent -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-desktop me-2"></i>
+                        Workstation Agent
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p class="card-text">
+                        Deploy on end-user workstations to track local security events and user activities.
+                    </p>
+                    
+                    <h6 class="fw-bold">What it collects:</h6>
+                    <ul class="mb-3">
+                        <li>Security event logs and audit trails</li>
+                        <li>Local user rights and permissions</li>
+                        <li>Local group memberships</li>
+                        <li>Local user accounts</li>
+                        <li>Workstation security policies</li>
+                        <li>User session activities</li>
+                    </ul>
+
+                    <div class="alert alert-secondary">
+                        <i class="fas fa-laptop me-2"></i>
+                        <small>Lightweight monitoring for endpoint security and compliance.</small>
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-info" @onclick="@(() => DownloadAgent("workstation"))">
+                                <i class="fas fa-download me-2"></i>
+                                Download Workstation Agent
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="@(() => ViewDocumentation("workstation"))">
+                                <i class="fas fa-book me-2"></i>
+                                View Documentation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        <i class="fas fa-user-cog me-1"></i>
+                        Requires Local Admin privileges
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Deployment Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">System Requirements</h6>
+                            <ul>
+                                <li>Windows Server 2016 or later (Server Agent)</li>
+                                <li>Windows 10/11 (Workstation Agent)</li>
+                                <li>Windows Server 2016 or later with AD DS role (DC Agent)</li>
+                                <li>.NET 6.0 Runtime or later</li>
+                                <li>Network connectivity to Permafrost2 API</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold">Security & Privacy</h6>
+                            <ul>
+                                <li>All data transmission is encrypted (TLS 1.2+)</li>
+                                <li>Agents run as Windows services</li>
+                                <li>No sensitive data is stored locally</li>
+                                <li>Configurable data collection intervals</li>
+                                <li>Audit logging for all agent activities</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private async Task DownloadAgent(string agentType)
+    {
+        try
+        {
+            var downloadUrl = agentType switch
+            {
+                "domain-controller" => "/api/agents/download/domain-controller",
+                "server" => "/api/agents/download/server",
+                "workstation" => "/api/agents/download/workstation",
+                _ => null
+            };
+
+            if (downloadUrl != null)
+            {
+                await JSRuntime.InvokeVoidAsync("open", downloadUrl, "_blank");
+            }
+            else
+            {
+                // Show notification that download is not available
+                await JSRuntime.InvokeVoidAsync("alert", "Agent download is not available yet.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error downloading {agentType} agent: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", "Download failed. Please try again.");
+        }
+    }
+
+    private void ViewDocumentation(string agentType)
+    {
+        // TODO: Navigate to documentation or open documentation modal
+        // For now, this is a placeholder
+        
+        var docUrl = agentType switch
+        {
+            "domain-controller" => "/docs/agents/domain-controller",
+            "server" => "/docs/agents/server", 
+            "workstation" => "/docs/agents/workstation",
+            _ => "/docs/agents"
+        };
+        
+        // Navigation.NavigateTo(docUrl);
+        Console.WriteLine($"Documentation requested for {agentType} agent");
+    }
+}

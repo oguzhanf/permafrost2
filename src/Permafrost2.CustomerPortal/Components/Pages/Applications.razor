@@ -1,0 +1,192 @@
+@page "/applications"
+@using Permafrost2.CustomerPortal.Services
+@using Permafrost2.Data.Models
+@inject IApplicationService ApplicationService
+@inject NavigationManager Navigation
+
+<PageTitle>Applications - Permafrost2 Customer Portal</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-desktop me-2"></i>
+                    Applications
+                </h1>
+                <div>
+                    <button class="btn btn-outline-secondary me-2" @onclick="RefreshData">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading applications...</p>
+            </div>
+        </div>
+    }
+    else if (applications?.Any() == true)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Application List (@applications.Count() applications)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Owner</th>
+                                        <th>Criticality</th>
+                                        <th>Source</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var app in applications)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>@app.Name</strong>
+                                                    @if (!string.IsNullOrEmpty(app.Description))
+                                                    {
+                                                        <br>
+                                                        <small class="text-muted">@app.Description</small>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@app.Type</span>
+                                            </td>
+                                            <td>@(app.Owner ?? "-")</td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(app.Criticality))
+                                                {
+                                                    <span class="badge @GetCriticalityBadgeClass(app.Criticality)">
+                                                        @app.Criticality
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">@app.Source</span>
+                                            </td>
+                                            <td>
+                                                @if (app.LastUpdated.HasValue)
+                                                {
+                                                    @app.LastUpdated.Value.ToString("MM/dd/yyyy HH:mm")
+                                                }
+                                                else
+                                                {
+                                                    @app.CreatedAt.ToString("MM/dd/yyyy HH:mm")
+                                                }
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1" 
+                                                        @onclick="() => ViewApplicationDetails(app.Id)">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    View
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-info" 
+                                                        @onclick="() => ViewApplicationReport(app.Id)">
+                                                    <i class="fas fa-chart-bar me-1"></i>
+                                                    Report
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No applications found. Applications will appear here once data collection runs have been completed.
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private IEnumerable<Application>? applications;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadApplications();
+    }
+
+    private async Task LoadApplications()
+    {
+        isLoading = true;
+        try
+        {
+            applications = await ApplicationService.GetApplicationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading applications: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadApplications();
+    }
+
+    private void ViewApplicationDetails(Guid applicationId)
+    {
+        Navigation.NavigateTo($"/applications/{applicationId}");
+    }
+
+    private void ViewApplicationReport(Guid applicationId)
+    {
+        Navigation.NavigateTo($"/reports/application/{applicationId}");
+    }
+
+    private string GetCriticalityBadgeClass(string criticality)
+    {
+        return criticality?.ToLower() switch
+        {
+            "high" => "bg-danger",
+            "medium" => "bg-warning",
+            "low" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}

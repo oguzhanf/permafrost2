@@ -1,0 +1,256 @@
+﻿@page "/"
+@using Permafrost2.CustomerPortal.Services
+@using Permafrost2.Data.Models
+@inject IReportService ReportService
+@inject IApplicationService ApplicationService
+@inject IUserService UserService
+
+<PageTitle>Dashboard - Permafrost2 Customer Portal</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-tachometer-alt me-2"></i>
+                Dashboard
+            </h1>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading dashboard data...</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title">@applicationStats.GetValueOrDefault("TotalApplications", 0)</h4>
+                                <p class="card-text">Total Applications</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-desktop fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title">@userStats.GetValueOrDefault("TotalUsers", 0)</h4>
+                                <p class="card-text">Total Users</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title">@userStats.GetValueOrDefault("TotalGroups", 0)</h4>
+                                <p class="card-text">Total Groups</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-layer-group fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="card-title">@applicationStats.GetValueOrDefault("TotalPermissions", 0)</h4>
+                                <p class="card-text">Total Permissions</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-key fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status and Recent Activity -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Recent Data Collection Runs
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (recentRuns?.Any() == true)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Data Source</th>
+                                            <th>Status</th>
+                                            <th>Started</th>
+                                            <th>Duration</th>
+                                            <th>Records</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var run in recentRuns.Take(5))
+                                        {
+                                            <tr>
+                                                <td>@run.DataSource.Name</td>
+                                                <td>
+                                                    <span class="badge @GetStatusBadgeClass(run.Status)">
+                                                        @run.Status
+                                                    </span>
+                                                </td>
+                                                <td>@run.StartedAt.ToString("MM/dd HH:mm")</td>
+                                                <td>
+                                                    @if (run.Duration.HasValue)
+                                                    {
+                                                        @run.Duration.Value.ToString(@"hh\:mm\:ss")
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">-</span>
+                                                    }
+                                                </td>
+                                                <td>@(run.RecordsProcessed?.ToString() ?? "-")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No recent data collection runs found.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-server me-2"></i>
+                            Data Sources Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (systemStatus?.DataSources?.Any() == true)
+                        {
+                            @foreach (var dataSource in systemStatus.DataSources)
+                            {
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <strong>@dataSource.Name</strong>
+                                        <br>
+                                        <small class="text-muted">@dataSource.Type</small>
+                                    </div>
+                                    <div>
+                                        <span class="badge @GetDataSourceStatusBadgeClass(dataSource.Status)">
+                                            @dataSource.Status
+                                        </span>
+                                    </div>
+                                </div>
+                                @if (dataSource != systemStatus.DataSources.Last())
+                                {
+                                    <hr>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">No data sources configured.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private Dictionary<string, int> applicationStats = new();
+    private Dictionary<string, int> userStats = new();
+    private SystemStatusReport? systemStatus;
+    private IEnumerable<DataCollectionRun>? recentRuns;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Load dashboard data
+            var applicationStatsTask = ApplicationService.GetApplicationStatsAsync();
+            var userStatsTask = UserService.GetUserStatsAsync();
+            var systemStatusTask = ReportService.GetSystemStatusReportAsync();
+            var recentRunsTask = ReportService.GetRecentDataCollectionRunsAsync(10);
+
+            await Task.WhenAll(applicationStatsTask, userStatsTask, systemStatusTask, recentRunsTask);
+
+            applicationStats = await applicationStatsTask;
+            userStats = await userStatsTask;
+            systemStatus = await systemStatusTask;
+            recentRuns = await recentRunsTask;
+        }
+        catch (Exception ex)
+        {
+            // Log error (in a real app, use proper logging)
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "completed" => "bg-success",
+            "running" => "bg-primary",
+            "failed" => "bg-danger",
+            "cancelled" => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetDataSourceStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "completed" => "bg-success",
+            "running" => "bg-primary",
+            "failed" => "bg-danger",
+            "disabled" => "bg-secondary",
+            _ => "bg-warning"
+        };
+    }
+}

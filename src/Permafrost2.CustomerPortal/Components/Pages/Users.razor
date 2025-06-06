@@ -1,0 +1,168 @@
+@page "/users"
+@using Permafrost2.CustomerPortal.Services
+@using Permafrost2.Data.Models
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Users - Permafrost2 Customer Portal</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-users me-2"></i>
+                    Users
+                </h1>
+                <div>
+                    <button class="btn btn-outline-secondary me-2" @onclick="RefreshData">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading users...</p>
+            </div>
+        </div>
+    }
+    else if (users?.Any() == true)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            User List (@users.Count() users)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Department</th>
+                                        <th>Job Title</th>
+                                        <th>Source</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in users)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>@(user.DisplayName ?? user.Username)</strong>
+                                                    @if (!string.IsNullOrEmpty(user.DisplayName) && user.DisplayName != user.Username)
+                                                    {
+                                                        <br>
+                                                        <small class="text-muted">@user.Username</small>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>@(user.Email ?? "-")</td>
+                                            <td>@(user.Department ?? "-")</td>
+                                            <td>@(user.JobTitle ?? "-")</td>
+                                            <td>
+                                                <span class="badge bg-secondary">@user.Source</span>
+                                            </td>
+                                            <td>
+                                                @if (user.LastUpdated.HasValue)
+                                                {
+                                                    @user.LastUpdated.Value.ToString("MM/dd/yyyy HH:mm")
+                                                }
+                                                else
+                                                {
+                                                    @user.CreatedAt.ToString("MM/dd/yyyy HH:mm")
+                                                }
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1" 
+                                                        @onclick="() => ViewUserDetails(user.Id)">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    View
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-info" 
+                                                        @onclick="() => ViewUserReport(user.Id)">
+                                                    <i class="fas fa-chart-bar me-1"></i>
+                                                    Report
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No users found. Users will appear here once data collection runs have been completed.
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private IEnumerable<User>? users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        try
+        {
+            users = await UserService.GetUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading users: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadUsers();
+    }
+
+    private void ViewUserDetails(Guid userId)
+    {
+        Navigation.NavigateTo($"/users/{userId}");
+    }
+
+    private void ViewUserReport(Guid userId)
+    {
+        Navigation.NavigateTo($"/reports/user/{userId}");
+    }
+}

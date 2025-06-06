@@ -1,0 +1,271 @@
+@page "/agent-management"
+@using Permafrost2.CustomerPortal.Services
+@using Permafrost2.Shared.DTOs
+@inject IAgentService AgentService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Agent Management - Permafrost2</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Agent Management</h1>
+                <button class="btn btn-primary" @onclick="RefreshData">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@agentStats.GetValueOrDefault("TotalAgents", 0)</h4>
+                            <p class="card-text">Total Agents</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-server fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@agentStats.GetValueOrDefault("OnlineAgents", 0)</h4>
+                            <p class="card-text">Online Agents</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@agentStats.GetValueOrDefault("TotalSubmissions", 0)</h4>
+                            <p class="card-text">Total Submissions</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-upload fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">@agentStats.GetValueOrDefault("TodaySubmissions", 0)</h4>
+                            <p class="card-text">Today's Submissions</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-day fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agents Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Registered Agents</h5>
+                </div>
+                <div class="card-body">
+                    @if (agents == null)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (!agents.Any())
+                    {
+                        <div class="text-center text-muted">
+                            <i class="fas fa-server fa-3x mb-3"></i>
+                            <p>No agents registered yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Machine</th>
+                                        <th>Status</th>
+                                        <th>Last Heartbeat</th>
+                                        <th>Last Collection</th>
+                                        <th>Version</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var agent in agents)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@agent.Name</strong>
+                                                @if (!string.IsNullOrEmpty(agent.Domain))
+                                                {
+                                                    <br><small class="text-muted">@agent.Domain</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge @GetTypeBadgeClass(agent.Type)">
+                                                    @agent.Type
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @agent.MachineName
+                                                @if (!string.IsNullOrEmpty(agent.IpAddress))
+                                                {
+                                                    <br><small class="text-muted">@agent.IpAddress</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge @GetStatusBadgeClass(agent.IsOnline, agent.Status)">
+                                                    @(agent.IsOnline ? "Online" : "Offline")
+                                                </span>
+                                                @if (!string.IsNullOrEmpty(agent.StatusMessage))
+                                                {
+                                                    <br><small class="text-muted">@agent.StatusMessage</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (agent.LastHeartbeat.HasValue)
+                                                {
+                                                    @agent.LastHeartbeat.Value.ToString("yyyy-MM-dd HH:mm")
+                                                    <br><small class="text-muted">@GetTimeAgo(agent.LastHeartbeat.Value)</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Never</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (agent.LastDataCollection.HasValue)
+                                                {
+                                                    @agent.LastDataCollection.Value.ToString("yyyy-MM-dd HH:mm")
+                                                    <br><small class="text-muted">@GetTimeAgo(agent.LastDataCollection.Value)</small>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Never</span>
+                                                }
+                                            </td>
+                                            <td>@agent.Version</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewAgentDetails(agent.Id)">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private IEnumerable<AgentStatusDto>? agents;
+    private Dictionary<string, int> agentStats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            agents = await AgentService.GetAgentsAsync();
+            agentStats = await AgentService.GetAgentStatsAsync();
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show a toast notification
+            Console.WriteLine($"Error loading agent data: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private void ViewAgentDetails(Guid agentId)
+    {
+        // TODO: Navigate to agent details page or show modal
+        Console.WriteLine($"View details for agent: {agentId}");
+    }
+
+    private string GetTypeBadgeClass(string type)
+    {
+        return type.ToLower() switch
+        {
+            "domaincontroller" => "bg-primary",
+            "server" => "bg-success",
+            "workstation" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusBadgeClass(bool isOnline, string? status)
+    {
+        if (!isOnline) return "bg-danger";
+        
+        return status?.ToLower() switch
+        {
+            "online" => "bg-success",
+            "error" => "bg-danger",
+            "updating" => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetTimeAgo(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+        
+        if (timeSpan.TotalMinutes < 1)
+            return "Just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes}m ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours}h ago";
+        if (timeSpan.TotalDays < 7)
+            return $"{(int)timeSpan.TotalDays}d ago";
+        
+        return dateTime.ToString("yyyy-MM-dd");
+    }
+}

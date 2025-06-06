@@ -1,0 +1,122 @@
+.page[b-yfwisyb5uu] {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow: visible;
+}
+
+main[b-yfwisyb5uu] {
+    flex: 1;
+    overflow: visible;
+}
+
+.sidebar[b-yfwisyb5uu] {
+    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+}
+
+.top-row[b-yfwisyb5uu] {
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #d6d5d5;
+    justify-content: flex-end;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    width: 100%;
+}
+
+    .top-row[b-yfwisyb5uu]  a, .top-row[b-yfwisyb5uu]  .btn-link {
+        white-space: nowrap;
+        margin-left: 1.5rem;
+        text-decoration: none;
+    }
+
+    .top-row[b-yfwisyb5uu]  a:hover, .top-row[b-yfwisyb5uu]  .btn-link:hover {
+        text-decoration: underline;
+    }
+
+    .top-row[b-yfwisyb5uu]  a:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+.content[b-yfwisyb5uu] {
+    flex: 1;
+    overflow: visible;
+}
+
+@media (max-width: 640.98px) {
+    .top-row[b-yfwisyb5uu] {
+        justify-content: space-between;
+    }
+
+    .top-row[b-yfwisyb5uu]  a, .top-row[b-yfwisyb5uu]  .btn-link {
+        margin-left: 0;
+    }
+}
+
+@media (min-width: 641px) {
+    .page[b-yfwisyb5uu] {
+        flex-direction: row;
+        overflow: visible;
+        height: 100vh;
+    }
+
+    .sidebar[b-yfwisyb5uu] {
+        width: 280px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        flex-shrink: 0;
+        z-index: 5;
+    }
+
+    main[b-yfwisyb5uu] {
+        flex: 1;
+        min-width: 0;
+        overflow: visible;
+    }
+
+    .top-row[b-yfwisyb5uu] {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        width: 100%;
+        flex-shrink: 0;
+    }
+
+    .top-row.auth[b-yfwisyb5uu]  a:first-child {
+        flex: 1;
+        text-align: right;
+        width: 0;
+    }
+
+    .top-row[b-yfwisyb5uu], article[b-yfwisyb5uu] {
+        padding-left: 2rem !important;
+        padding-right: 1.5rem !important;
+    }
+}
+
+#blazor-error-ui[b-yfwisyb5uu] {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss[b-yfwisyb5uu] {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }

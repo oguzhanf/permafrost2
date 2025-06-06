@@ -1,0 +1,12 @@
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\bin\Debug\net9.0\Permafrost2.Core.deps.json
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\bin\Debug\net9.0\Permafrost2.Core.dll
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\bin\Debug\net9.0\Permafrost2.Core.pdb
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\Permafrost2.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\Permafrost2.Core.AssemblyInfoInputs.cache
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\Permafrost2.Core.AssemblyInfo.cs
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\Permafrost2.Core.csproj.CoreCompileInputs.cache
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\Permafrost2.Core.sourcelink.json
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\Permafrost2.Core.dll
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\refint\Permafrost2.Core.dll
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\Permafrost2.Core.pdb
+C:\Users\oguzhan.permafrost\Desktop\permafrost\src\Permafrost2.Core\obj\Debug\net9.0\ref\Permafrost2.Core.dll
