@@ -87,6 +87,20 @@ public class ConfigurationManager : IConfigurationManager
         await SaveAgentConfigAsync(config);
     }
 
+    public async Task<string?> GetSettingAsync(string key)
+    {
+        var config = await LoadAgentConfigAsync();
+        return config.Settings?.GetValueOrDefault(key);
+    }
+
+    public async Task SetSettingAsync(string key, string value)
+    {
+        var config = await LoadAgentConfigAsync();
+        config.Settings ??= new Dictionary<string, string>();
+        config.Settings[key] = value;
+        await SaveAgentConfigAsync(config);
+    }
+
     private async Task<AgentConfig> LoadAgentConfigAsync()
     {
         try
@@ -137,5 +151,6 @@ public class ConfigurationManager : IConfigurationManager
         public AgentConfigurationDto? Configuration { get; set; }
         public DateTime? LastHeartbeat { get; set; }
         public DateTime? LastDataCollection { get; set; }
+        public Dictionary<string, string>? Settings { get; set; }
     }
 }

@@ -27,6 +27,9 @@ public class PermafrostDbContext : DbContext
     // Agent management
     public DbSet<Agent> Agents { get; set; }
     public DbSet<AgentDataSubmission> AgentDataSubmissions { get; set; }
+    public DbSet<AgentError> AgentErrors { get; set; }
+    public DbSet<AgentErrorReport> AgentErrorReports { get; set; }
+    public DbSet<AgentCertificate> AgentCertificates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -143,6 +146,63 @@ public class PermafrostDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.AgentId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure AgentError entity
+        modelBuilder.Entity<AgentError>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ErrorId).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.Source).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.StackTrace).HasMaxLength(8000);
+            entity.Property(e => e.AdditionalData).HasMaxLength(4000);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Resolution).HasMaxLength(1000);
+            entity.Property(e => e.ResolvedBy).HasMaxLength(256);
+            entity.HasOne(e => e.Agent)
+                  .WithMany()
+                  .HasForeignKey(e => e.AgentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.AgentId, e.ErrorId }).IsUnique();
+            entity.HasIndex(e => e.OccurredAt);
+            entity.HasIndex(e => new { e.Severity, e.Category });
+        });
+
+        // Configure AgentErrorReport entity
+        modelBuilder.Entity<AgentErrorReport>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.StatusMessage).HasMaxLength(1000);
+            entity.Property(e => e.ProcessingDetails).HasMaxLength(4000);
+            entity.HasOne(e => e.Agent)
+                  .WithMany()
+                  .HasForeignKey(e => e.AgentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.ReportedAt);
+        });
+
+        // Configure AgentCertificate entity
+        modelBuilder.Entity<AgentCertificate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Thumbprint).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.SerialNumber).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Issuer).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Usage).HasMaxLength(100);
+            entity.Property(e => e.RevocationReason).HasMaxLength(100);
+            entity.Property(e => e.CertificateData).HasMaxLength(4000);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.HasOne(e => e.Agent)
+                  .WithMany()
+                  .HasForeignKey(e => e.AgentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.Thumbprint).IsUnique();
+            entity.HasIndex(e => new { e.AgentId, e.Status });
+            entity.HasIndex(e => e.NotAfter);
         });
     }
 }

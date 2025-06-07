@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Permafrost2.Data;
 
@@ -11,9 +12,11 @@ using Permafrost2.Data;
 namespace Permafrost2.Data.Migrations
 {
     [DbContext(typeof(PermafrostDbContext))]
-    partial class PermafrostDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250607154230_AddAgentCertificates")]
+    partial class AddAgentCertificates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
