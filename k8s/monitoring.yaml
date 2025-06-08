@@ -1,0 +1,325 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: permafrost-backend-monitor
+  namespace: permafrost
+  labels:
+    app.kubernetes.io/name: permafrost
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: permafrost
+      app.kubernetes.io/component: backend
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: permafrost-postgres-monitor
+  namespace: permafrost
+  labels:
+    app.kubernetes.io/name: permafrost
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: permafrost
+      app.kubernetes.io/component: database
+  endpoints:
+  - port: postgres
+    interval: 30s
+    scrapeTimeout: 10s
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: permafrost-nats-monitor
+  namespace: permafrost
+  labels:
+    app.kubernetes.io/name: permafrost
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: permafrost
+      app.kubernetes.io/component: messaging
+  endpoints:
+  - port: monitor
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: permafrost-alerts
+  namespace: permafrost
+  labels:
+    app.kubernetes.io/name: permafrost
+    app.kubernetes.io/component: monitoring
+spec:
+  groups:
+  - name: permafrost.rules
+    rules:
+    # High error rate alert
+    - alert: PermafrostHighErrorRate
+      expr: |
+        (
+          rate(http_requests_total{job="permafrost-backend",code=~"5.."}[5m]) /
+          rate(http_requests_total{job="permafrost-backend"}[5m])
+        ) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        service: permafrost
+      annotations:
+        summary: "High error rate detected in Permafrost backend"
+        description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+    
+    # High response time alert
+    - alert: PermafrostHighResponseTime
+      expr: |
+        histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="permafrost-backend"}[5m])) > 2
+      for: 5m
+      labels:
+        severity: warning
+        service: permafrost
+      annotations:
+        summary: "High response time detected in Permafrost backend"
+        description: "95th percentile response time is {{ $value }}s"
+    
+    # Database connection alert
+    - alert: PermafrostDatabaseDown
+      expr: |
+        up{job="permafrost-postgres"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: permafrost
+      annotations:
+        summary: "Permafrost database is down"
+        description: "PostgreSQL database has been down for more than 1 minute"
+    
+    # NATS connection alert
+    - alert: PermafrostNATSDown
+      expr: |
+        up{job="permafrost-nats"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: permafrost
+      annotations:
+        summary: "Permafrost NATS is down"
+        description: "NATS messaging system has been down for more than 1 minute"
+    
+    # Pod restart alert
+    - alert: PermafrostPodRestarting
+      expr: |
+        rate(kube_pod_container_status_restarts_total{namespace="permafrost"}[15m]) > 0
+      for: 5m
+      labels:
+        severity: warning
+        service: permafrost
+      annotations:
+        summary: "Permafrost pod is restarting frequently"
+        description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last 15 minutes"
+    
+    # Memory usage alert
+    - alert: PermafrostHighMemoryUsage
+      expr: |
+        (
+          container_memory_working_set_bytes{namespace="permafrost"} /
+          container_spec_memory_limit_bytes{namespace="permafrost"}
+        ) > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        service: permafrost
+      annotations:
+        summary: "High memory usage in Permafrost"
+        description: "Memory usage is {{ $value | humanizePercentage }} for container {{ $labels.container }} in pod {{ $labels.pod }}"
+    
+    # CPU usage alert
+    - alert: PermafrostHighCPUUsage
+      expr: |
+        (
+          rate(container_cpu_usage_seconds_total{namespace="permafrost"}[5m]) /
+          container_spec_cpu_quota{namespace="permafrost"} * container_spec_cpu_period{namespace="permafrost"}
+        ) > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        service: permafrost
+      annotations:
+        summary: "High CPU usage in Permafrost"
+        description: "CPU usage is {{ $value | humanizePercentage }} for container {{ $labels.container }} in pod {{ $labels.pod }}"
+    
+    # Disk space alert
+    - alert: PermafrostLowDiskSpace
+      expr: |
+        (
+          kubelet_volume_stats_available_bytes{namespace="permafrost"} /
+          kubelet_volume_stats_capacity_bytes{namespace="permafrost"}
+        ) < 0.1
+      for: 5m
+      labels:
+        severity: critical
+        service: permafrost
+      annotations:
+        summary: "Low disk space in Permafrost"
+        description: "Disk space is {{ $value | humanizePercentage }} available for volume {{ $labels.persistentvolumeclaim }}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: permafrost
+  labels:
+    app.kubernetes.io/name: permafrost
+    app.kubernetes.io/component: monitoring
+data:
+  permafrost-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Permafrost Identity Management",
+        "tags": ["permafrost", "identity", "active-directory"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=\"permafrost-backend\"}[5m])",
+                "legendFormat": "{{method}} {{code}}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Requests/sec"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": 2,
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"permafrost-backend\"}[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"permafrost-backend\"}[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Seconds"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 0
+            }
+          },
+          {
+            "id": 3,
+            "title": "Error Rate",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=\"permafrost-backend\",code=~\"5..\"}[5m]) / rate(http_requests_total{job=\"permafrost-backend\"}[5m])",
+                "legendFormat": "Error Rate"
+              }
+            ],
+            "valueName": "current",
+            "format": "percentunit",
+            "gridPos": {
+              "h": 4,
+              "w": 6,
+              "x": 0,
+              "y": 8
+            }
+          },
+          {
+            "id": 4,
+            "title": "Active Users",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "permafrost_active_users_total",
+                "legendFormat": "Active Users"
+              }
+            ],
+            "valueName": "current",
+            "gridPos": {
+              "h": 4,
+              "w": 6,
+              "x": 6,
+              "y": 8
+            }
+          },
+          {
+            "id": 5,
+            "title": "Database Connections",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "pg_stat_database_numbackends{datname=\"permafrost\"}",
+                "legendFormat": "Active Connections"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 12
+            }
+          },
+          {
+            "id": 6,
+            "title": "NATS Messages",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(nats_server_sent_msgs[5m])",
+                "legendFormat": "Messages Sent/sec"
+              },
+              {
+                "expr": "rate(nats_server_recv_msgs[5m])",
+                "legendFormat": "Messages Received/sec"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 12
+            }
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
